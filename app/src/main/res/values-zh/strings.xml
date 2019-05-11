@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">鐵路地圖</string>
+    <string name="title_activity_license">開源軟件授權</string>
+    <string name="search">搜尋…</string>
+    <string name="load_stations_err">無法加載鐵路站資料</string>
+    <string name="load_map_err">無法加載鐵路地圖</string>
+</resources>

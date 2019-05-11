@@ -1,11 +1,13 @@
 package me.lkp111138.railwaymap2.activity;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
@@ -27,6 +29,7 @@ import me.lkp111138.railwaymap2.helpers.StationDetector;
 public class MainActivity extends AppCompatActivity {
     private ViewGroup loading_dialog;
     private StationDetector.Station selected_station;
+    private long tap_down_time;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,18 +57,30 @@ public class MainActivity extends AppCompatActivity {
                     // it may be a gesture and not a tap, so ignore
                     return false;
                 }
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    // this is used to detect taps which are short
+                    tap_down_time = System.currentTimeMillis();
+                }
                 if (event.getAction() != MotionEvent.ACTION_UP) {
                     // the touch isnt finalized, abort
                     return false;
+                } else {
+                    // is it short enough to be a tap?
+                    if (System.currentTimeMillis() > tap_down_time + 125) {
+                        // exceeded 125ms
+                        tap_down_time = -1;
+                        return false;
+                    }
                 }
-                double w = map.getWidth();
-                double h = map.getHeight();
+                tap_down_time = -1;
+                float w = map.getWidth();
+                float h = map.getHeight();
                 PointF map_center = map.getCenter();
-                double center_x = w / 2.0;
-                double center_y = h / 2.0;
+                float center_x = w / 2.0f;
+                float center_y = h / 2.0f;
                 if (map_center != null) {
-                    double click_x = map_center.x + (event.getX() - center_x) / map.getScale();
-                    double click_y = map_center.y + (event.getY() - center_y) / map.getScale();
+                    float click_x = map_center.x + (event.getX() - center_x) / map.getScale();
+                    float click_y = map_center.y + (event.getY() - center_y) / map.getScale();
                     System.out.printf("clicked on %f %f\n", click_x, click_y);
                     StationDetector.Station station = StationDetector.fromCoords(click_x, click_y);
                     // store no matter what since it is intended to be null if the
@@ -74,7 +89,15 @@ public class MainActivity extends AppCompatActivity {
                     if (station != null) {
                         // the user clicked on a station, handle it and consume the event
                         System.out.printf("clicked on %s\n", station);
-                        search_field.setQuery(station.name, true);
+                        search_field.setQuery(station.name, false);
+                        search_field.setIconified(false);
+                        search_field.clearFocus();
+                        if (map.getScale() < 1.5) {
+                            SubsamplingScaleImageView.AnimationBuilder animation = map.animateScaleAndCenter(1.5f, new PointF(click_x, click_y));
+                            if (animation != null) {
+                                animation.start();
+                            }
+                        }
                         return true;
                     }
                 }
@@ -97,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
                 // it turns out the json file is invalid, lets download it again on next launch
                 CacheManager.invalidate(this, filename);
-                Toast.makeText(this, "Unable to load station data", Toast.LENGTH_SHORT)
+                Toast.makeText(this, R.string.load_stations_err, Toast.LENGTH_SHORT)
                         .show();
             }
         });
@@ -132,7 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(IOException e) {
-                Toast.makeText(MainActivity.this, "Unable to load map", Toast.LENGTH_SHORT)
+                Toast.makeText(MainActivity.this, R.string.load_map_err, Toast.LENGTH_SHORT)
                         .show();
                 Log.w("MainActivity", "Unable to load map image: " + e.getMessage());
             }
@@ -159,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onError(IOException e) {
-                Toast.makeText(MainActivity.this, "Unable to load station data", Toast.LENGTH_SHORT)
+                Toast.makeText(MainActivity.this, R.string.load_stations_err, Toast.LENGTH_SHORT)
                         .show();
                 Log.w("MainActivity", "Unable to load station data: " + e.getMessage());
             }
@@ -175,5 +198,10 @@ public class MainActivity extends AppCompatActivity {
                 onDownload();
             }
         });
+    }
+
+    public void openLicenseActivity(View v) {
+        Intent in = new Intent(this, LicenseActivity.class);
+        startActivity(in);
     }
 }
