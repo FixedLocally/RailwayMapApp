@@ -7,8 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -66,12 +64,12 @@ public class CacheManager {
         callback.onStartDownload();
         client.newCall(req).enqueue(new Callback() {
             @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 callback.onError(e);
             }
 
             @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 // time to cache
                 String cache_filename = ctx.getCacheDir().getAbsolutePath() + File.separator + System.currentTimeMillis();
                 ResponseBody body = response.body();

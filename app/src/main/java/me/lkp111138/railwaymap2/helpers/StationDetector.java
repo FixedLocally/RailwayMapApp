@@ -1,6 +1,7 @@
 package me.lkp111138.railwaymap2.helpers;
 
-import org.jetbrains.annotations.Nullable;
+import android.support.annotation.Nullable;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
